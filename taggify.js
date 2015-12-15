@@ -16,11 +16,12 @@
             SELECTOR_TAG = '.' + CLASS_TAGGIFY_TAG,
             KEY_COMMA = 188,
             KEY_ENTER = 13,
-            dummyCallback = function (event) { return event; },
+            dummyCallback = function (value, callback) { callback(value); },
             finalParams = {
                 containerSelector: SELECTOR_TAGGIFY,
                 autocomplete: false,
                 autocompleteCallback: dummyCallback,
+                inputDelay: 100,
                 inputPlaceholder: 'Start typing ...',
                 allowDuplicates: false
             },
@@ -33,40 +34,57 @@
             paramKey,
             taggifyContainer,
             createdTags,
-            _inputKeyupEventHandler = function (event) {
-                if (event.target.value.length && event.target.classList.contains(CLASS_TAGGIFY_INPUT_EMPTY)) {
-                    event.target.classList.remove(CLASS_TAGGIFY_INPUT_EMPTY);
-                } else {
-                    event.target.classList.add(CLASS_TAGGIFY_INPUT_EMPTY);
-                }
+            timeoutInputKeyup,
+            _createTagsNoAutocomplete = function (event) {
+                var tagsMap = {},
+                    tags;
 
                 if ((event.keyCode || event.which) === KEY_COMMA || (event.keyCode || event.which) === KEY_ENTER) {
-                    _createTags(event);
-                }
-            },
-            _createTags = function (event) {
-                var tagsMap = {},
-                    tagsFragment = document.createDocumentFragment(),
                     tags = event.target.value
                         .split(',')
-                        .map(function (tag) {
-                            return tag.trim();
+                        .map(function (tag, index) {
+                            return {
+                                id: index,
+                                label: tag.trim()
+                            };
                         })
                         .filter(function (tag) {
                             if (!finalParams.allowDuplicates) {
-                                if (tagsMap[tag]) {
+                                if (!tag.label.length || tagsMap[tag.label]) {
                                     return false;
                                 }
 
-                                tagsMap[tag] = true;
+                                tagsMap[tag.label] = true;
 
                                 return tag;
                             } else {
-                                return !!tag.length;
+                                return !!tag.label.length;
                             }
                         });
 
-                event.target.value = tags.join(', ') + ', ';
+                    event.target.value = tags.map(function (tag) { return tag.label; }).join(', ') + ', ';
+                    _createTags(tags);
+                }
+            },
+            _inputKeyupEventHandler = function (event) {
+                window.clearTimeout(timeoutInputKeyup);
+
+                timeoutInputKeyup = window.setTimeout(function () {
+                    if (event.target.value.length && event.target.classList.contains(CLASS_TAGGIFY_INPUT_EMPTY)) {
+                        event.target.classList.remove(CLASS_TAGGIFY_INPUT_EMPTY);
+                    } else {
+                        event.target.classList.add(CLASS_TAGGIFY_INPUT_EMPTY);
+                    }
+
+                    if (finalParams.autocomplete) {
+                        finalParams.autocompleteCallback(event.target.value, _createTags);
+                    } else {
+                        _createTagsNoAutocomplete(event);
+                    }
+                }, finalParams.inputDelay);
+            },
+            _createTags = function (tags) {
+                var tagsFragment = document.createDocumentFragment();
 
                 tags.forEach(function (tag) {
                     var elementTag = document.createElement('div'),
@@ -74,12 +92,14 @@
                         elementTagRemove = document.createElement('button');
 
                     elementTagLabel.classList.add(CLASS_TAGGIFY_TAG_LABEL);
-                    elementTagLabel.innerHTML = tag;
+                    elementTagLabel.innerHTML = tag.label;
 
                     elementTagRemove.classList.add(CLASS_TAGGIFY_TAG_REMOVE);
 
                     elementTag.classList.add(CLASS_TAGGIFY_TAG);
-                    elementTag.dataset.tagText = tag;
+                    elementTag.dataset.tagText = tag.label;
+                    elementTag.dataset.tagId = tag.id;
+
                     elementTag.appendChild(elementTagLabel);
                     elementTag.appendChild(elementTagRemove);
 
@@ -102,15 +122,24 @@
             _isTagRemoveButtonCallback = function (element) { return (element.classList && element.classList.contains(CLASS_TAGGIFY_TAG_REMOVE)); },
             _removeTag = function (event) {
                 var tagRemoveBtn = _getElement(event.target, _isTagRemoveButtonCallback),
-                    tags = Array.prototype.slice.call(this.querySelectorAll(SELECTOR_TAG)),
+                    inputText = '',
                     tag;
 
                 if (tagRemoveBtn) {
                     tag = _getElement(event.target, _isTagCallback);
 
-                    createdTags.splice(tags.indexOf(tag), 1);
+                    createdTags = createdTags.filter(function (createdTag) {
+                        var createdTagId = '' + createdTag.id,
+                            tagId = '' + tag.dataset.tagId;
 
-                    taggifyInput.value = createdTags.join(', ') + ', ';
+                        return createdTagId !== tagId;
+                    });
+
+                    if (!finalParams.autocomplete) {
+                        inputText = createdTags.map(function (tag) { return tag.label; }).join(', ') + ', ';
+                    }
+
+                    taggifyInput.value = inputText;
 
                     this.removeChild(tag);
                 }
@@ -153,5 +182,26 @@
         taggifyTags.addEventListener('click', _removeTag, false);
     };
 
-    new window.Taggify();
+    new window.Taggify({
+        autocomplete: true,
+        autocompleteCallback: function (value, callback) {
+            var xhttp = new XMLHttpRequest(),
+                prepareTags = function () {
+                    if (xhttp.readyState !== XMLHttpRequest.DONE) {
+                        return;
+                    }
+
+                    if (xhttp.status === 200) {
+                        callback(JSON.parse(xhttp.responseText));
+                    }
+                };
+
+            value = value.split(',').map(function (tag) { return tag.trim(); });
+            value = value[value.length - 1];
+
+            xhttp.onreadystatechange = prepareTags;
+            xhttp.open('GET', 'http://localhost:3000/users?q=' + value, true);
+            xhttp.send();
+        }
+    });
 })(window, window.document, window.console);
