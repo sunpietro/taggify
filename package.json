@@ -1,0 +1,28 @@
+{
+    "name": "taggify",
+    "version": "1.0.0",
+    "description": "Create tags by typing",
+    "main": "index.html",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/sunpietro/taggify.git"
+    },
+    "scripts": {
+        "minify": "uglifyjs taggify.js -m -o taggify.min.js",
+        "demo": "json-server --watch db.json"
+    },
+    "keywords": [
+        "tags",
+        "js",
+        "autocomplete"
+    ],
+    "author": "Piotr Nalepa",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/sunpietro/taggify/issues"
+    },
+    "homepage": "https://github.com/sunpietro/taggify",
+    "devDependencies": {
+        "json-server": "^0.8.3"
+    }
+}
