@@ -1,11 +1,10 @@
-(function (window, document, console) {
+(function (window, document) {
     'use strict';
 
     window.Taggify = function (params) {
         var CLASS_TAGGIFY = 'taggify',
             CLASS_TAGGIFY_WRAPPER = CLASS_TAGGIFY + '__wrapper',
             CLASS_TAGGIFY_INPUT = CLASS_TAGGIFY_WRAPPER + '__input',
-            CLASS_TAGGIFY_INPUT_EMPTY = CLASS_TAGGIFY_INPUT + '--empty',
             CLASS_TAGGIFY_LABEL = CLASS_TAGGIFY_WRAPPER + '__label',
             CLASS_TAGGIFY_RESULTS = CLASS_TAGGIFY_WRAPPER + '__results',
             CLASS_TAGGIFY_TAGS = CLASS_TAGGIFY + '__tags',
@@ -13,7 +12,7 @@
             CLASS_TAGGIFY_TAG_LABEL = CLASS_TAGGIFY_TAG + '__label',
             CLASS_TAGGIFY_TAG_REMOVE = CLASS_TAGGIFY_TAG + '__remove',
             SELECTOR_TAGGIFY = '.' + CLASS_TAGGIFY,
-            SELECTOR_TAG = '.' + CLASS_TAGGIFY_TAG,
+            DIV = 'div',
             KEY_COMMA = 188,
             KEY_ENTER = 13,
             dummyCallback = function (value, callback) { callback(value); },
@@ -28,9 +27,9 @@
             taggifyId = CLASS_TAGGIFY + '-' + Date.now(),
             taggifyInput = document.createElement('input'),
             taggifyLabel = document.createElement('label'),
-            taggifyTags = document.createElement('div'),
-            taggifyResults = document.createElement('div'),
-            taggifyInputWrapper = document.createElement('div'),
+            taggifyTags = document.createElement(DIV),
+            taggifyResults = document.createElement(DIV),
+            taggifyInputWrapper = document.createElement(DIV),
             paramKey,
             taggifyContainer,
             createdTags,
@@ -70,12 +69,6 @@
                 window.clearTimeout(timeoutInputKeyup);
 
                 timeoutInputKeyup = window.setTimeout(function () {
-                    if (event.target.value.length && event.target.classList.contains(CLASS_TAGGIFY_INPUT_EMPTY)) {
-                        event.target.classList.remove(CLASS_TAGGIFY_INPUT_EMPTY);
-                    } else {
-                        event.target.classList.add(CLASS_TAGGIFY_INPUT_EMPTY);
-                    }
-
                     if (finalParams.autocomplete) {
                         finalParams.autocompleteCallback(event.target.value, _createTags);
                     } else {
@@ -87,7 +80,7 @@
                 var tagsFragment = document.createDocumentFragment();
 
                 tags.forEach(function (tag) {
-                    var elementTag = document.createElement('div'),
+                    var elementTag = document.createElement(DIV),
                         elementTagLabel = document.createElement('span'),
                         elementTagRemove = document.createElement('button');
 
@@ -107,7 +100,13 @@
                 });
 
                 createdTags = tags;
-                taggifyTags.innerHTML = '';
+
+                if (!finalParams.autocomplete) {
+                    taggifyTags.innerHTML = '';
+                } else {
+                    taggifyInput.value = '';
+                }
+
                 taggifyTags.appendChild(tagsFragment);
             },
             _getElement = function (element, callback) {
@@ -166,7 +165,6 @@
         taggifyInput.id = taggifyId;
         taggifyInput.type = 'text';
         taggifyInput.classList.add(CLASS_TAGGIFY_INPUT);
-        taggifyInput.classList.add(CLASS_TAGGIFY_INPUT_EMPTY);
 
         taggifyResults.classList.add(CLASS_TAGGIFY_RESULTS);
         taggifyTags.classList.add(CLASS_TAGGIFY_TAGS);
@@ -174,34 +172,11 @@
         taggifyContainer.appendChild(taggifyInputWrapper);
         taggifyContainer.appendChild(taggifyTags);
 
-        taggifyInputWrapper.appendChild(taggifyInput);
         taggifyInputWrapper.appendChild(taggifyLabel);
+        taggifyInputWrapper.appendChild(taggifyInput);
         taggifyInputWrapper.appendChild(taggifyResults);
 
         taggifyInput.addEventListener('keyup', _inputKeyupEventHandler, false);
         taggifyTags.addEventListener('click', _removeTag, false);
     };
-
-    new window.Taggify({
-        autocomplete: true,
-        autocompleteCallback: function (value, callback) {
-            var xhttp = new XMLHttpRequest(),
-                prepareTags = function () {
-                    if (xhttp.readyState !== XMLHttpRequest.DONE) {
-                        return;
-                    }
-
-                    if (xhttp.status === 200) {
-                        callback(JSON.parse(xhttp.responseText));
-                    }
-                };
-
-            value = value.split(',').map(function (tag) { return tag.trim(); });
-            value = value[value.length - 1];
-
-            xhttp.onreadystatechange = prepareTags;
-            xhttp.open('GET', 'http://localhost:3000/users?q=' + value, true);
-            xhttp.send();
-        }
-    });
-})(window, window.document, window.console);
+})(window, window.document);
