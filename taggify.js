@@ -17,12 +17,64 @@
             KEY_ENTER = 13,
             dummyCallback = function (value, callback) { callback(value); },
             finalParams = {
+                /**
+                 * Container selector to find HTML node to initialize taggify element
+                 *
+                 * @property containerSelector
+                 * @type {String}
+                 * @default '.taggify'
+                 */
                 containerSelector: SELECTOR_TAGGIFY,
+                /**
+                 * Indicator whether to use autocomplete callback
+                 *
+                 * @property autocomplete
+                 * @type {Boolean}
+                 * @default false
+                 */
                 autocomplete: false,
+                /**
+                 * Indicator whether to use autocomplete callback
+                 *
+                 * @property autocompleteCallback
+                 * @type {Function}
+                 * @default dummyCallback
+                 */
                 autocompleteCallback: dummyCallback,
+                /**
+                 * The input delay. After this time, the tags are created.
+                 *
+                 * @property inputDelay
+                 * @type {Number}
+                 * @default 100
+                 */
                 inputDelay: 100,
-                inputPlaceholder: 'Start typing ...',
-                allowDuplicates: false
+                /**
+                 * The text to display to a user
+                 *
+                 * @property inputLabel
+                 * @type {String}
+                 * @default 'Start typing ...'
+                 */
+                inputLabel: 'Start typing ...',
+                /**
+                 * Indicator whether to allow duplicated tags.
+                 * Used when autocomplete is turned off.
+                 *
+                 * @property allowDuplicates
+                 * @type {Boolean}
+                 * @default false
+                 */
+                allowDuplicates: false,
+                /**
+                 * List of hot keys which generate tags when autocomplete is off.
+                 * The list contains key codes, like - coma is 188, but enter is 13.
+                 *
+                 * @property hotKeys
+                 * @type {Array}
+                 * @default ['[,]', '[enter]']
+                 */
+                hotKeys: [KEY_COMMA, KEY_ENTER]
             },
             taggifyId = CLASS_TAGGIFY + '-' + Date.now(),
             taggifyInput = document.createElement('input'),
@@ -34,11 +86,24 @@
             taggifyContainer,
             createdTags,
             timeoutInputKeyup,
+            /**
+             * Input keyup event callback.
+             * Fired when autocomplete is turned off.
+             * When a user types a comma or presses the enter key it starts creating tags from the input text.
+             * A coma-separated text is converted into tags.
+             *
+             * @method _createTagsNoAutocomplete
+             * @private
+             * @param event {Object} input keyup event object
+             */
             _createTagsNoAutocomplete = function (event) {
                 var tagsMap = {},
+                    isHotKeyUsed = finalParams.hotKeys.some(function (key) {
+                        return (event.keyCode || event.which) === key;
+                    }),
                     tags;
 
-                if ((event.keyCode || event.which) === KEY_COMMA || (event.keyCode || event.which) === KEY_ENTER) {
+                if (isHotKeyUsed) {
                     tags = event.target.value
                         .split(',')
                         .map(function (tag, index) {
@@ -65,6 +130,15 @@
                     _createTags(tags);
                 }
             },
+            /**
+             * Input keyup event handler.
+             * Basing on provided config it either provides data to autocomplete callback
+             * or creates tags from user input with a delay.
+             *
+             * @method _inputKeyupEventHandler
+             * @private
+             * @param event {Object} input keyup event object
+             */
             _inputKeyupEventHandler = function (event) {
                 window.clearTimeout(timeoutInputKeyup);
 
@@ -76,6 +150,13 @@
                     }
                 }, finalParams.inputDelay);
             },
+            /**
+             * Creates tags
+             *
+             * @method _createTags
+             * @private
+             * @param tags {Array} an array of tag objects (id, label)
+             */
             _createTags = function (tags) {
                 var tagsFragment = document.createDocumentFragment();
 
@@ -109,6 +190,15 @@
 
                 taggifyTags.appendChild(tagsFragment);
             },
+            /**
+             * Gets an element based on filtered using a provided callback
+             *
+             * @method _getElement
+             * @private
+             * @param element {HTMLElement} the HTML node element
+             * @param callback {Function} the comparison callback to find element
+             * @return element {HTMLElement|undefined}
+             */
             _getElement = function (element, callback) {
                 var parent = element.parentNode;
 
@@ -117,8 +207,32 @@
 
                 return callback(parent) ? parent : _getElement(parent, callback);
             },
+            /**
+             * The comparison callback finding tag element
+             *
+             * @method _isTagCallback
+             * @private
+             * @param element {HTMLElement} the HTML node element
+             * @return {Boolean}
+             */
             _isTagCallback = function (element) { return (element.classList && element.classList.contains(CLASS_TAGGIFY_TAG)); },
+            /**
+             * The comparison callback finding remove tag button
+             *
+             * @method _isTagRemoveButtonCallback
+             * @private
+             * @param element {HTMLElement} the HTML node element
+             * @return {Boolean}
+             */
             _isTagRemoveButtonCallback = function (element) { return (element.classList && element.classList.contains(CLASS_TAGGIFY_TAG_REMOVE)); },
+            /**
+             * Click event handler.
+             * Removes a selected tag.
+             *
+             * @method _removeTag
+             * @private
+             * @param event {Object} input keyup event object
+             */
             _removeTag = function (event) {
                 var tagRemoveBtn = _getElement(event.target, _isTagRemoveButtonCallback),
                     inputText = '',
@@ -157,7 +271,7 @@
         taggifyInputWrapper.classList.add(CLASS_TAGGIFY_WRAPPER);
 
         taggifyLabel.for = taggifyId;
-        taggifyLabel.innerHTML = finalParams.inputPlaceholder;
+        taggifyLabel.innerHTML = finalParams.inputLabel;
 
         taggifyLabel.setAttribute('for', taggifyId);
         taggifyLabel.classList.add(CLASS_TAGGIFY_LABEL);
