@@ -15,7 +15,7 @@
             DIV = 'div',
             KEY_COMMA = 188,
             KEY_ENTER = 13,
-            dummyCallback = function (value, callback) { callback(value); },
+            defaultAutocompleteCallback = function (value, callback) { callback(value); },
             finalParams = {
                 /**
                  * Container selector to find HTML node to initialize taggify element
@@ -38,9 +38,9 @@
                  *
                  * @property autocompleteCallback
                  * @type {Function}
-                 * @default dummyCallback
+                 * @default defaultAutocompleteCallback
                  */
-                autocompleteCallback: dummyCallback,
+                autocompleteCallback: defaultAutocompleteCallback,
                 /**
                  * The input delay. After this time, the tags are created.
                  *
@@ -84,7 +84,7 @@
             taggifyInputWrapper = document.createElement(DIV),
             paramKey,
             taggifyContainer,
-            createdTags,
+            createdTags = [],
             timeoutInputKeyup,
             /**
              * Input keyup event callback.
@@ -126,7 +126,6 @@
                             }
                         });
 
-                    event.target.value = tags.map(function (tag) { return tag.label; }).join(', ') + ', ';
                     _createTags(tags);
                 }
             },
@@ -158,7 +157,28 @@
              * @param tags {Array} an array of tag objects (id, label)
              */
             _createTags = function (tags) {
-                var tagsFragment = document.createDocumentFragment();
+                var tagsFragment = document.createDocumentFragment(),
+                    tagsMap = {};
+
+                if (!Array.isArray(tags)) {
+                    return;
+                }
+
+                if (createdTags.length) {
+                    tags = createdTags.concat(tags);
+                }
+
+                if (!finalParams.allowDuplicates) {
+                    tags = tags.filter(function (tag) {
+                        if (tagsMap[tag.label]) {
+                            return false;
+                        }
+
+                        tagsMap[tag.label] = true;
+
+                        return true;
+                    });
+                }
 
                 tags.forEach(function (tag) {
                     var elementTag = document.createElement(DIV),
@@ -184,6 +204,7 @@
 
                 if (!finalParams.autocomplete) {
                     taggifyTags.innerHTML = '';
+                    taggifyInput.value = tags.map(function (tag) { return tag.label; }).join(', ') + ', ';
                 } else {
                     taggifyInput.value = '';
                 }
@@ -249,7 +270,8 @@
                     });
 
                     if (!finalParams.autocomplete) {
-                        inputText = createdTags.map(function (tag) { return tag.label; }).join(', ') + ', ';
+                        inputText = createdTags.map(function (tag) { return tag.label; }).join(', ');
+                        inputText = inputText.trim().length ? inputText + ', ' : '';
                     }
 
                     taggifyInput.value = inputText;
