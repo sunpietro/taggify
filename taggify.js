@@ -34,7 +34,11 @@
                  */
                 autocomplete: false,
                 /**
-                 * Indicator whether to use autocomplete callback
+                 * The autocomplete callback.
+                 * The callback takes 2 params:
+                 *     * value      - the taggify input value,
+                 *     * callback   - the callback where data should be provided
+                 *                    in order to generate tags
                  *
                  * @property autocompleteCallback
                  * @type {Function}
@@ -42,7 +46,7 @@
                  */
                 autocompleteCallback: defaultAutocompleteCallback,
                 /**
-                 * The input delay. After this time, the tags are created.
+                 * The input event callback delay. After this time, the tags are created.
                  *
                  * @property inputDelay
                  * @type {Number}
@@ -50,7 +54,7 @@
                  */
                 inputDelay: 100,
                 /**
-                 * The text to display to a user
+                 * The text to display to a user as a label
                  *
                  * @property inputLabel
                  * @type {String}
@@ -72,7 +76,7 @@
                  *
                  * @property hotKeys
                  * @type {Array}
-                 * @default ['[,]', '[enter]']
+                 * @default [13, 188]
                  */
                 hotKeys: [KEY_COMMA, KEY_ENTER]
             },
