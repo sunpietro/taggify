@@ -15,7 +15,7 @@
             DIV = 'div',
             KEY_COMMA = 188,
             KEY_ENTER = 13,
-            defaultAutocompleteCallback = function (value, callback) { callback(value); },
+            defaultAutocompleteCallback = function (value, callback) { callback(_createTagsArrayFromString(value)); },
             finalParams = {
                 /**
                  * Container selector to find HTML node to initialize taggify element
@@ -91,6 +91,39 @@
             createdTags = [],
             timeoutInputKeyup,
             /**
+             * Creates a tags array from the string input
+             *
+             * @method _createTagsArrayFromString
+             * @private
+             * @param value {String} input value
+             * @return {Array} array of tags
+             */
+            _createTagsArrayFromString = function (value) {
+                var tagsMap = {};
+
+                return value
+                    .split(',')
+                    .map(function (tag, index) {
+                        return {
+                            id: index,
+                            label: tag.trim()
+                        };
+                    })
+                    .filter(function (tag) {
+                        if (!finalParams.allowDuplicates) {
+                            if (!tag.label.length || tagsMap[tag.label]) {
+                                return false;
+                            }
+
+                            tagsMap[tag.label] = true;
+
+                            return tag;
+                        } else {
+                            return !!tag.label.length;
+                        }
+                    });
+            },
+            /**
              * Input keyup event callback.
              * Fired when autocomplete is turned off.
              * When a user types a comma or presses the enter key it starts creating tags from the input text.
@@ -101,34 +134,13 @@
              * @param event {Object} input keyup event object
              */
             _createTagsNoAutocomplete = function (event) {
-                var tagsMap = {},
-                    isHotKeyUsed = finalParams.hotKeys.some(function (key) {
+                var isHotKeyUsed = finalParams.hotKeys.some(function (key) {
                         return (event.keyCode || event.which) === key;
                     }),
                     tags;
 
                 if (isHotKeyUsed) {
-                    tags = event.target.value
-                        .split(',')
-                        .map(function (tag, index) {
-                            return {
-                                id: index,
-                                label: tag.trim()
-                            };
-                        })
-                        .filter(function (tag) {
-                            if (!finalParams.allowDuplicates) {
-                                if (!tag.label.length || tagsMap[tag.label]) {
-                                    return false;
-                                }
-
-                                tagsMap[tag.label] = true;
-
-                                return tag;
-                            } else {
-                                return !!tag.label.length;
-                            }
-                        });
+                    tags = _createTagsArrayFromString(event.target.value);
 
                     _createTags(tags);
                 }
