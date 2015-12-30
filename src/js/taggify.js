@@ -2,17 +2,21 @@
     'use strict';
 
     window.Taggify = function (params) {
-        var CLASS_TAGGIFY = 'taggify',
+        var SUFFIX_LABEL = '__label',
+            CLASS_TAGGIFY = 'taggify',
             CLASS_TAGGIFY_WRAPPER = CLASS_TAGGIFY + '__wrapper',
             CLASS_TAGGIFY_INPUT = CLASS_TAGGIFY_WRAPPER + '__input',
-            CLASS_TAGGIFY_LABEL = CLASS_TAGGIFY_WRAPPER + '__label',
-            CLASS_TAGGIFY_RESULTS = CLASS_TAGGIFY_WRAPPER + '__results',
+            CLASS_TAGGIFY_LABEL = CLASS_TAGGIFY_WRAPPER + SUFFIX_LABEL,
             CLASS_TAGGIFY_TAGS = CLASS_TAGGIFY + '__tags',
             CLASS_TAGGIFY_TAG = CLASS_TAGGIFY_TAGS + '__tag',
-            CLASS_TAGGIFY_TAG_LABEL = CLASS_TAGGIFY_TAG + '__label',
+            CLASS_TAGGIFY_TAG_LABEL = CLASS_TAGGIFY_TAG + SUFFIX_LABEL,
             CLASS_TAGGIFY_TAG_REMOVE = CLASS_TAGGIFY_TAG + '__remove',
             SELECTOR_TAGGIFY = '.' + CLASS_TAGGIFY,
+            EVENT_TAGS_CREATED = 'tagsCreated',
+            EVENT_TAG_REMOVED = 'tagRemoved',
+            EVENT_TAG_NOT_REMOVED = 'tagNotRemoved',
             DIV = 'div',
+            TAG_DELIMITER = ', ',
             KEY_COMMA = 188,
             KEY_ENTER = 13,
             defaultAutocompleteCallback = function (value, callback) { callback(_createTagsArrayFromString(value)); },
@@ -84,12 +88,31 @@
             taggifyInput = document.createElement('input'),
             taggifyLabel = document.createElement('label'),
             taggifyTags = document.createElement(DIV),
-            taggifyResults = document.createElement(DIV),
             taggifyInputWrapper = document.createElement(DIV),
             paramKey,
             taggifyContainer,
             createdTags = [],
             timeoutInputKeyup,
+            hasCustomEventConstructor = window.hasOwnProperty('CustomEvent'),
+            _fire = function (eventName) {
+                var event,
+                    eventConfig;
+
+                if (hasCustomEventConstructor) {
+                    eventConfig = {
+                        bubbles: true,
+                        cancelable: false
+                    };
+
+                    event = new CustomEvent(eventName, eventConfig);
+                } else {
+                    event = document.createEvent('CustomEvent');
+
+                    event.initEvent(eventName, false, true);
+                }
+
+                taggifyContainer.dispatchEvent(event);
+            },
             /**
              * Creates a tags array from the string input
              *
@@ -205,6 +228,7 @@
                     elementTagLabel.innerHTML = tag.label;
 
                     elementTagRemove.classList.add(CLASS_TAGGIFY_TAG_REMOVE);
+                    elementTagRemove.innerHTML = 'x';
 
                     elementTag.classList.add(CLASS_TAGGIFY_TAG);
                     elementTag.dataset.tagText = tag.label;
@@ -220,12 +244,14 @@
 
                 if (!finalParams.autocomplete) {
                     taggifyTags.innerHTML = '';
-                    taggifyInput.value = tags.map(function (tag) { return tag.label; }).join(', ') + ', ';
+                    taggifyInput.value = tags.map(function (tag) { return tag.label; }).join(TAG_DELIMITER) + TAG_DELIMITER;
                 } else {
                     taggifyInput.value = '';
                 }
 
                 taggifyTags.appendChild(tagsFragment);
+
+                _fire(EVENT_TAGS_CREATED);
             },
             /**
              * Gets an element based on filtered using a provided callback
@@ -286,13 +312,17 @@
                     });
 
                     if (!finalParams.autocomplete) {
-                        inputText = createdTags.map(function (tag) { return tag.label; }).join(', ');
-                        inputText = inputText.trim().length ? inputText + ', ' : '';
+                        inputText = createdTags.map(function (tag) { return tag.label; }).join(TAG_DELIMITER);
+                        inputText = inputText.trim().length ? inputText + TAG_DELIMITER : '';
                     }
 
                     taggifyInput.value = inputText;
 
                     this.removeChild(tag);
+
+                    _fire(EVENT_TAG_REMOVED);
+                } else {
+                    _fire(EVENT_TAG_NOT_REMOVED);
                 }
             };
 
@@ -318,7 +348,6 @@
         taggifyInput.type = 'text';
         taggifyInput.classList.add(CLASS_TAGGIFY_INPUT);
 
-        taggifyResults.classList.add(CLASS_TAGGIFY_RESULTS);
         taggifyTags.classList.add(CLASS_TAGGIFY_TAGS);
 
         taggifyContainer.appendChild(taggifyInputWrapper);
@@ -326,7 +355,6 @@
 
         taggifyInputWrapper.appendChild(taggifyLabel);
         taggifyInputWrapper.appendChild(taggifyInput);
-        taggifyInputWrapper.appendChild(taggifyResults);
 
         taggifyInput.addEventListener('keyup', _inputKeyupEventHandler, false);
         taggifyTags.addEventListener('click', _removeTag, false);
