@@ -11,7 +11,6 @@ var expect = chai.expect,
     SELECTOR_TAG_REMOVE = SELECTOR_TAG + '__remove',
     EVENT_TAGS_CREATED = 'tagsCreated',
     EVENT_TAG_REMOVED = 'tagRemoved',
-    EVENT_TAG_NOT_REMOVED = 'tagNotRemoved',
     EVENT_KEYUP = 'keyup',
     EVENT_CLICK = 'click',
     KEY_COMMA = 188,
@@ -151,33 +150,6 @@ describe('Taggify', function () {
 
                 fireEvent(EVENT_KEYUP, input, KEY_COMMA);
             });
-
-            // it('Should not remove a selected tag when not clicking on `X` button inside the tag', function (done) {
-            //     var input = document.querySelector(SELECTOR_INPUT),
-            //         taggify = document.querySelector(SELECTOR_TAGGIFY),
-            //         tagsContainer = document.querySelector(SELECTOR_TAGS),
-            //         inputText = TEST_TAG_NAME1 + ', ' + TEST_TAG_NAME2;
-
-            //     input.value = inputText;
-
-            //     taggify.addEventListener(EVENT_TAGS_CREATED, function () {
-            //         var tags = tagsContainer.querySelectorAll(SELECTOR_TAG);
-
-            //         expect(tagsContainer).to.contain(SELECTOR_TAG);
-            //         expect(tags).to.have.length(2);
-
-            //         tags[0].click();
-            //     }, false);
-
-            //     taggify.addEventListener(EVENT_TAG_NOT_REMOVED, function () {
-            //         expect(tagsContainer).to.contain(SELECTOR_TAG);
-            //         expect(tagsContainer.querySelectorAll(SELECTOR_TAG)).to.have.length(2);
-
-            //         done();
-            //     }, false);
-
-            //     fireEvent(EVENT_KEYUP, input, KEY_COMMA);
-            // });
         });
     });
 
