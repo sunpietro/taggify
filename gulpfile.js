@@ -3,6 +3,7 @@
 'use strict';
 
 var gulp = require('gulp'),
+    jshint = require('gulp-jshint'),
     Server = require('karma').Server,
     gutil = require('gulp-util');
 
@@ -12,3 +13,9 @@ gulp.task('test', function (done) {
         singleRun: true
     }, done).start();
 });
+
+gulp.task('lint', function () {
+    return gulp.src('src/js/taggify.js').pipe(jshint());
+});
+
+gulp.task('default', ['lint', 'test']);
