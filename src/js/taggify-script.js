@@ -1,29 +1,3 @@
-/*@preserve
- * Taggify - input tags creating library v1.0.0
- * https://github.com/sunpietro/taggify
- *
- * Copyright 2015-2017 Piotr Nalepa
- * http://blog.piotrnalepa.pl
- *
- * Released under the MIT license
- * https://github.com/sunpietro/taggify/blob/master/LICENSE
- *
- * Date: 2017-11-27T08:00Z
- */
- //jshint ignore:line
-;(function (root, moduleName, factory) {
-    'use strict';
-
-    if (typeof define === 'function' && define.amd) {
-        define(moduleName, factory);
-    } else if (typeof exports === 'object') {
-        exports = module.exports = factory();
-    } else {
-        root[moduleName] = factory();
-    }
-})(this, 'Taggify', function () {
-    'use strict';
-
 var Taggify = function (params) {
     var SUFFIX_LABEL = '__label',
         CLASS_TAGGIFY = 'taggify',
@@ -382,7 +356,3 @@ var Taggify = function (params) {
     taggifyInput.addEventListener('keyup', _inputKeyupEventHandler, false);
     taggifyTags.addEventListener('click', _removeTag, false);
 };
-
-
-    return Taggify;
-});

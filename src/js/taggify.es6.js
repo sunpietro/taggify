@@ -11,19 +11,6 @@
  * Date: 2017-11-27T08:00Z
  */
  //jshint ignore:line
-;(function (root, moduleName, factory) {
-    'use strict';
-
-    if (typeof define === 'function' && define.amd) {
-        define(moduleName, factory);
-    } else if (typeof exports === 'object') {
-        exports = module.exports = factory();
-    } else {
-        root[moduleName] = factory();
-    }
-})(this, 'Taggify', function () {
-    'use strict';
-
 var Taggify = function (params) {
     var SUFFIX_LABEL = '__label',
         CLASS_TAGGIFY = 'taggify',
@@ -382,7 +369,6 @@ var Taggify = function (params) {
     taggifyInput.addEventListener('keyup', _inputKeyupEventHandler, false);
     taggifyTags.addEventListener('click', _removeTag, false);
 };
+ //jshint ignore:line
 
-
-    return Taggify;
-});
+export default Taggify;
