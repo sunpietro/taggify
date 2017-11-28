@@ -364,7 +364,7 @@ var Taggify = function (params) {
 
                 this.removeChild(tag);
 
-                _fire(EVENT_TAG_REMOVED);
+                _fire(EVENT_TAG_REMOVED, {tags: createdTags});
             } else {
                 _fire(EVENT_TAG_NOT_REMOVED);
             }
@@ -406,4 +406,25 @@ var Taggify = function (params) {
 
     taggifyInput.addEventListener('keyup', _inputKeyupEventHandler, false);
     taggifyTags.addEventListener('click', _removeTag, false);
+
+    return {
+        /**
+         * Updates list of tags
+         *
+         * @method updateTags
+         * @param {Array} tags each tag is an object with a following structure: `{label: <String>, id: <String>}`
+         * @returns {Taggify}
+         */
+        updateTags: function (tags) {
+            if (finalParams.displayInputValues) {
+                taggifyInput.value = tags.map(function (tag) {
+                    return tag.label;
+                }).join(', ');
+            }
+
+            _createTags(tags);
+
+            return this;
+        }
+    }
 };

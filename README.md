@@ -60,3 +60,15 @@ By default: `[13, 188]`
 
 ### displayLabel {Boolean}
 Flag indicating whether an input label should be displayed
+
+## Methods
+
+### updateTags
+The method allows to create tags based on provided array of strings
+
+
+```javascript
+const tags = ['a','b','c'];
+
+taggify.updateTags(tags);
+```
