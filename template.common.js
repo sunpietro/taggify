@@ -1,4 +1,4 @@
-[COMMENT] //jshint ignore:line
+[COMMENT]
 ;(function (root, moduleName, factory) {
     'use strict';
 
@@ -12,7 +12,7 @@
 })(this, 'Taggify', function () {
     'use strict';
 
-[TAGGIFY]
+    [TAGGIFY]
 
     return Taggify;
 });

@@ -10,7 +10,7 @@
  *
  * Date: 2017-11-27T08:00Z
  */
- //jshint ignore:line
+
 ;(function (root, moduleName, factory) {
     'use strict';
 
@@ -24,7 +24,7 @@
 })(this, 'Taggify', function () {
     'use strict';
 
-var Taggify = function (params) {
+    var Taggify = function (params) {
     var SUFFIX_LABEL = '__label',
         CLASS_TAGGIFY = 'taggify',
         CLASS_TAGGIFY_WRAPPER = CLASS_TAGGIFY + '__wrapper',
@@ -44,6 +44,14 @@ var Taggify = function (params) {
         KEY_ENTER = 13,
         defaultAutocompleteCallback = function (value, callback) { callback(_createTagsArrayFromString(value)); },
         finalParams = {
+            /**
+             * Container node to load taggify
+             *
+             * @property containerNode
+             * @type {HTMLElement}
+             * @default null
+             */
+            containerNode: null,
             /**
              * Container selector to find HTML node to initialize taggify element
              *
@@ -105,7 +113,23 @@ var Taggify = function (params) {
              * @type {Array}
              * @default [13, 188]
              */
-            hotKeys: [KEY_COMMA, KEY_ENTER]
+            hotKeys: [KEY_COMMA, KEY_ENTER],
+            /**
+             * Should display input label?
+             *
+             * @property displayLabel
+             * @type {Boolean}
+             * @default true
+             */
+            displayLabel: true,
+            /**
+             * Should display input values?
+             *
+             * @property displayInputValues
+             * @type {Boolean}
+             * @default true
+             */
+            displayInputValues: true
         },
         taggifyId = CLASS_TAGGIFY + '-' + Date.now(),
         taggifyInput = document.createElement('input'),
@@ -117,7 +141,15 @@ var Taggify = function (params) {
         createdTags = [],
         timeoutInputKeyup,
         hasCustomEventConstructor = window.hasOwnProperty('CustomEvent'),
-        _fire = function (eventName) {
+        /**
+         * Fires a custom event on the Taggify container node
+         *
+         * @method _fire
+         * @private
+         * @param {String} eventName
+         * @param {Object} props
+         */
+        _fire = function (eventName, props) {
             var event,
                 eventConfig;
 
@@ -126,6 +158,10 @@ var Taggify = function (params) {
                     bubbles: true,
                     cancelable: false
                 };
+
+                if (props && Object.keys(props).length) {
+                    eventConfig.detail = props;
+                }
 
                 event = new CustomEvent(eventName, eventConfig);
             } else {
@@ -146,12 +182,12 @@ var Taggify = function (params) {
          */
         _createTagsArrayFromString = function (value) {
             var tagsMap = {};
+            var inputTags = value.split(',');
 
-            return value
-                .split(',')
-                .map(function (tag, index) {
+            return inputTags
+                .map(function (tag) {
                     return {
-                        id: index,
+                        id: Math.floor((1 + Math.random()) * 0x10000).toString(16),
                         label: tag.trim()
                     };
                 })
@@ -181,12 +217,16 @@ var Taggify = function (params) {
          */
         _createTagsNoAutocomplete = function (event) {
             var isHotKeyUsed = finalParams.hotKeys.some(function (key) {
-                    return (event.keyCode || event.which) === key;
-                }),
+                return (event.keyCode || event.which) === key;
+            }),
                 tags;
 
             if (isHotKeyUsed) {
                 tags = _createTagsArrayFromString(event.target.value);
+
+                if (!finalParams.displayInputValues) {
+                    tags = createdTags.concat(tags);
+                }
 
                 _createTags(tags);
             }
@@ -267,14 +307,19 @@ var Taggify = function (params) {
 
             if (!finalParams.autocomplete) {
                 taggifyTags.innerHTML = '';
-                taggifyInput.value = tags.map(function (tag) { return tag.label; }).join(TAG_DELIMITER) + TAG_DELIMITER;
+
+                if (finalParams.displayInputValues) {
+                    taggifyInput.value = tags.map(function (tag) { return tag.label; }).join(TAG_DELIMITER) + TAG_DELIMITER;
+                } else {
+                    taggifyInput.value = '';
+                }
             } else {
                 taggifyInput.value = '';
             }
 
             taggifyTags.appendChild(tagsFragment);
 
-            _fire(EVENT_TAGS_CREATED);
+            _fire(EVENT_TAGS_CREATED, { tags: createdTags });
         },
         /**
          * Gets an element based on filtered using a provided callback
@@ -339,7 +384,9 @@ var Taggify = function (params) {
                     inputText = inputText.trim().length ? inputText + TAG_DELIMITER : '';
                 }
 
-                taggifyInput.value = inputText;
+                if (finalParams.displayInputValues) {
+                    taggifyInput.value = inputText;
+                }
 
                 this.removeChild(tag);
 
@@ -356,16 +403,12 @@ var Taggify = function (params) {
         }
     }
 
-    taggifyContainer = document.querySelector(finalParams.containerSelector);
+    taggifyContainer = finalParams.containerNode ?
+        finalParams.containerNode :
+        document.querySelector(finalParams.containerSelector);
     taggifyContainer.innerHTML = '';
 
     taggifyInputWrapper.classList.add(CLASS_TAGGIFY_WRAPPER);
-
-    taggifyLabel.for = taggifyId;
-    taggifyLabel.innerHTML = finalParams.inputLabel;
-
-    taggifyLabel.setAttribute('for', taggifyId);
-    taggifyLabel.classList.add(CLASS_TAGGIFY_LABEL);
 
     taggifyInput.id = taggifyId;
     taggifyInput.type = 'text';
@@ -376,7 +419,15 @@ var Taggify = function (params) {
     taggifyContainer.appendChild(taggifyInputWrapper);
     taggifyContainer.appendChild(taggifyTags);
 
-    taggifyInputWrapper.appendChild(taggifyLabel);
+    if (finalParams.displayLabel) {
+        taggifyLabel.for = taggifyId;
+        taggifyLabel.innerHTML = finalParams.inputLabel;
+
+        taggifyLabel.setAttribute('for', taggifyId);
+        taggifyLabel.classList.add(CLASS_TAGGIFY_LABEL);
+        taggifyInputWrapper.appendChild(taggifyLabel);
+    }
+
     taggifyInputWrapper.appendChild(taggifyInput);
 
     taggifyInput.addEventListener('keyup', _inputKeyupEventHandler, false);

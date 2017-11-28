@@ -1,4 +1,4 @@
-[COMMENT] //jshint ignore:line
-[TAGGIFY] //jshint ignore:line
+[COMMENT]
+[TAGGIFY]
 
 export default Taggify;

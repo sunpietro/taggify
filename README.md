@@ -31,6 +31,9 @@ Taggify library uses a configuration object containing following properties:
 ### containerSelector {String}
 Container selector to find HTML node to initialize taggify element. By default: `'.taggify'`
 
+### containerNode {HTMLElement}
+Container node to initialize taggify element. Will be used instead of `containerSelector`, if defined.
+
 ### autocomplete {Boolean}
 Indicator whether to use autocomplete callback. By default: `false`
 
@@ -54,3 +57,6 @@ By default: `false`
 List of hot keys which generate tags when autocomplete is off.
 The list contains key codes, like - _coma_ is 188, but _enter_ is 13.
 By default: `[13, 188]`
+
+### displayLabel {Boolean}
+Flag indicating whether an input label should be displayed
