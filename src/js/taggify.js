@@ -221,7 +221,7 @@
             }),
                 tags;
 
-            if (isHotKeyUsed) {
+            if (isHotKeyUsed || event.type === 'blur') {
                 tags = _createTagsArrayFromString(event.target.value);
 
                 if (!finalParams.displayInputValues) {
@@ -243,13 +243,20 @@
         _inputKeyupEventHandler = function (event) {
             window.clearTimeout(timeoutInputKeyup);
 
-            timeoutInputKeyup = window.setTimeout(function () {
-                if (finalParams.autocomplete) {
-                    finalParams.autocompleteCallback(event.target.value, _createTags);
-                } else {
-                    _createTagsNoAutocomplete(event);
-                }
-            }, finalParams.inputDelay);
+            timeoutInputKeyup = window.setTimeout(_createTagsFromInput.bind(null, event), finalParams.inputDelay);
+        },
+        /**
+         * Creates tags from an event fired on input
+         *
+         * @method _createTagsFromInput
+         * @param {Event} event
+         */
+        _createTagsFromInput = function (event) {
+            if (finalParams.autocomplete) {
+                finalParams.autocompleteCallback(event.target.value, _createTags);
+            } else {
+                _createTagsNoAutocomplete(event);
+            }
         },
         /**
          * Creates tags
@@ -390,7 +397,7 @@
 
                 this.removeChild(tag);
 
-                _fire(EVENT_TAG_REMOVED, {tags: createdTags});
+                _fire(EVENT_TAG_REMOVED, { tags: createdTags });
             } else {
                 _fire(EVENT_TAG_NOT_REMOVED);
             }
@@ -431,6 +438,7 @@
     taggifyInputWrapper.appendChild(taggifyInput);
 
     taggifyInput.addEventListener('keyup', _inputKeyupEventHandler, false);
+    taggifyInput.addEventListener('blur', _createTagsFromInput, false);
     taggifyTags.addEventListener('click', _removeTag, false);
 
     return {
