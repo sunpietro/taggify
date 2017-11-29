@@ -12,7 +12,7 @@
 })(this, 'Taggify', function () {
     'use strict';
 
-    [TAGGIFY]
+[TAGGIFY]
 
     return Taggify;
 });
